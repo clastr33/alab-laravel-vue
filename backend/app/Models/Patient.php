@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Patient extends Model
+class Patient extends Authenticatable implements JWTSubject
 {
     public $incrementing = false;
 
@@ -13,6 +14,7 @@ class Patient extends Model
 
     protected $fillable = [
         'id',
+        'login',
         'name',
         'surname',
         'sex',
@@ -26,5 +28,15 @@ class Patient extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function getJWTIdentifier(): mixed
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims(): array
+    {
+        return [];
     }
 }
