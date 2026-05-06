@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id')->primary();
             $table->string('name');
             $table->string('surname');
-            $table->char('sex', 1);
+            $table->string('sex');
             $table->date('birth_date');
             $table->timestamps();
 
