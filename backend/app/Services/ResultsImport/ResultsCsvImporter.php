@@ -7,6 +7,7 @@ use App\Models\Patient;
 use App\Models\Result;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 final class ResultsCsvImporter
 {
@@ -66,10 +67,13 @@ final class ResultsCsvImporter
 
                 try {
                     $validated = $this->validator->validate($data);
+                    $login = Str::ascii($validated->patientName.$validated->patientSurname);
+                    $login = preg_replace('/\s+/', '', $login) ?? $login;
 
                     $patient = Patient::updateOrCreate(
                         ['id' => $validated->patientId],
                         [
+                            'login' => $login,
                             'name' => $validated->patientName,
                             'surname' => $validated->patientSurname,
                             'sex' => $validated->patientSex,
