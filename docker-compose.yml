@@ -40,6 +40,8 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost:8000
+      # Required by tymon/jwt-auth to sign tokens (same idea as in CI env).
+      JWT_SECRET: local-dev-secret
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
@@ -55,6 +57,18 @@ services:
     command: >
       sh -lc "
         composer install &&
+        # Ensure .env exists (for APP_KEY/JWT_SECRET etc.)
+        if [ ! -f .env ]; then cp .env.example .env; fi &&
+        php artisan key:generate --force &&
+        # Ensure JWT secret exists for token signing.
+        # NOTE: In some setups `.env` may contain an empty `JWT_SECRET=` line which would override container env vars.
+        # We explicitly write JWT_SECRET into `.env` from the container environment.
+        if [ -z \"$${JWT_SECRET:-}\" ]; then echo 'JWT_SECRET is not set in container environment' && exit 1; fi &&
+        if grep -q '^JWT_SECRET=' .env; then
+          sed -i \"s/^JWT_SECRET=.*/JWT_SECRET=$${JWT_SECRET}/\" .env;
+        else
+          echo \"JWT_SECRET=$${JWT_SECRET}\" >> .env;
+        fi &&
         php artisan config:clear &&
         (php artisan migrate --force || php artisan migrate:fresh --force) &&
         # Ensure the storage marker directory exists.
