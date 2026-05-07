@@ -8,7 +8,7 @@ trait ImportsResultsCsv
 {
     protected function importResultsCsv(): void
     {
-        (new ResultsCsvImporter())->import(base_path('../import/results.csv'));
+        (new ResultsCsvImporter())->import(base_path('import/results.csv'));
     }
 }
 

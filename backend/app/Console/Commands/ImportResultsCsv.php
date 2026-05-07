@@ -7,7 +7,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use App\Services\ResultsImport\ResultsCsvImporter;
 
-#[Signature('app:import-results-csv {path=../import/results.csv : Path to results.csv}')]
+#[Signature('app:import-results-csv {path=import/results.csv : Path to results.csv}')]
 #[Description('Import patients, orders and test results from results.csv')]
 class ImportResultsCsv extends Command
 {

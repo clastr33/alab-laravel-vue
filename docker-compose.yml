@@ -1,0 +1,109 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: alab
+      MYSQL_USER: alab
+      MYSQL_PASSWORD: alabpass
+      # Root password for administrative access (used by healthcheck too).
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      # Publish on 3307 to avoid clashing with a local MySQL on 3306.
+      - "3307:3306"
+    volumes:
+      # Named volume storing MySQL data so it survives container recreation.
+      - mysql_data:/var/lib/mysql
+      # SQL init scripts executed on first DB initialization (fresh volume).
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    # Healthcheck so other services can wait until MySQL is ready.
+    healthcheck:
+      # Command used to verify MySQL is accepting connections.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    # Build settings from Dockerfile
+    build:
+      # Build context (directory sent to the Docker daemon).
+      context: ./backend
+      dockerfile: Dockerfile
+    working_dir: /var/www/html
+    # Mounts for backend source code and PHP dependencies.
+    volumes:
+      # Bind-mount backend source code into the container for live editing.
+      - ./backend:/var/www/html
+      # Named volume for Composer dependencies so host bind-mount doesn't overwrite vendor/.
+      - backend_vendor:/var/www/html/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: alab
+      DB_USERNAME: alab
+      DB_PASSWORD: alabpass
+    # Startup ordering: backend waits for MySQL to be healthy.
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: >
+      sh -lc "
+        composer install &&
+        php artisan config:clear &&
+        (php artisan migrate --force || php artisan migrate:fresh --force) &&
+        # Ensure the storage marker directory exists.
+        mkdir -p storage/app &&
+        # If CSV exists and (we haven't imported yet OR the DB is empty), run the importer.
+        if [ -f /var/www/html/import/results.csv ]; then
+          ORDERS_COUNT=$(php -r 'require "vendor/autoload.php"; $$application=require "bootstrap/app.php"; $$application->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); echo \\App\\Models\\Order::count();');
+          if [ ! -f storage/app/.results_csv_imported ] || [ "${ORDERS_COUNT:-0}" = "0" ]; then
+            php artisan app:import-results-csv /var/www/html/import/results.csv &&
+            # Marker file prevents unnecessary re-import when DB already has data.
+            touch storage/app/.results_csv_imported;
+          fi;
+        fi &&
+        # Start Laravel's built-in dev server, listening on all interfaces.
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    working_dir: /app
+    # Mounts for frontend source code and Node dependencies.
+    volumes:
+      # Bind-mount frontend source code for live reload.
+      - ./frontend:/app
+      # Named volume for node_modules so bind-mount doesn't override dependencies.
+      - frontend_node_modules:/app/node_modules
+    # Environment variables for the Vite dev server.
+    environment:
+      # Use polling-based watching to avoid missed file events on Windows mounts.
+      CHOKIDAR_USEPOLLING: "true"
+      # Backend API base URL for Vite proxy when running inside Docker network.
+      VITE_API_TARGET: "http://backend:8000"
+    # Ensure frontend starts after backend is started (API should be reachable).
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    command: >
+      sh -lc "
+        npm install &&
+        # Start Vite dev server on all interfaces so it is reachable from host.
+        npm run dev -- --host 0.0.0.0 --port 5173
+      "
+
+# Named volumes used by services above for constant keeping of data.
+# For remove: docker compose down -v   or   docker volume rm ...
+volumes:
+  mysql_data:
+  backend_vendor:
+  frontend_node_modules:
