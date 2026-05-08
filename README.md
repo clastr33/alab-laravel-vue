@@ -13,14 +13,14 @@ Repozytorium zawiera:
 
 ## Wymagania
 
-### Lokalnie (bez Dockera)
+#### Lokalnie (bez Dockera)
 
 - PHP (zgodny z `backend/composer.json`)
 - Composer
 - Node.js + npm
 - MySQL 8 (lub zgodnie z konfiguracją)
 
-### Lokalnie (z Dockerem) — rekomendowane
+#### Lokalnie (z Dockerem) — rekomendowane
 
 - Docker + Docker Compose
 
@@ -61,7 +61,7 @@ docker compose exec backend php artisan app:import-results-csv /var/www/html/imp
 
 ## Uruchomienie lokalne bez Dockera
 
-### Backend (Laravel)
+#### Backend (Laravel)
 
 1. Instalacja zależności:
 
@@ -97,9 +97,7 @@ php artisan app:import-results-csv import/results.csv
 Log importu trafia do: `backend/storage/logs/import-results.log`.
 
 
-
-
-### Frontend (Vue)
+#### Frontend (Vue)
 
 ```bash
 cd frontend
@@ -118,9 +116,10 @@ npm run build
 </p>
 
 
+
 ## Testy
 
-### Backend (PHPUnit)
+#### Backend (PHPUnit)
 
 ```bash
 cd backend
@@ -150,7 +149,7 @@ Konfiguracja pipeline znajduje się w `.gitlab-ci.yml` i składa się z etapów:
 - `build`: buduje frontend
 - `docker`: buduje i wypycha obrazy Dockera (backend + frontend) do GitLab Container Registry
 
-### Job: `backend:tests`
+#### Job: `backend:tests`
 
 - **Image**: `php:8.4-cli`
 - **Service**: `mysql:8.0` (alias `mysql`)
@@ -163,7 +162,7 @@ Konfiguracja pipeline znajduje się w `.gitlab-ci.yml` i składa się z etapów:
   - `php artisan test --ansi`
 - **Artefakty** (zawsze): `backend/storage/logs/` (pomocne przy debugowaniu)
 
-### Job: `frontend:build`
+#### Job: `frontend:build`
 
 - **Image**: `node:20-alpine`
 - **Kroki**:
@@ -171,7 +170,7 @@ Konfiguracja pipeline znajduje się w `.gitlab-ci.yml` i składa się z etapów:
   - `npm run build`
 - **Artefakty**: `frontend/dist/`
 
-### Job: `docker:build_and_push`
+#### Job: `docker:build_and_push`
 
 - **Image**: `docker:27` + `docker:27-dind`
 - **Wymaga**:
@@ -188,7 +187,20 @@ Konfiguracja pipeline znajduje się w `.gitlab-ci.yml` i składa się z etapów:
   <img src="frontend/src/assets/Screenshot_gitlab.png" alt="GitLab" />
 </p>
 
+
+
 ## Linki
 
 - GitHub: [clastr33/alab-laravel-vue](https://github.com/clastr33/alab-laravel-vue)
 - GitLab: [clastr/alab-laravel-vue](https://gitlab.com/clastr/alab-laravel-vue)
+
+
+
+#### Update GitLab
+```bash
+cd ../alabgitlab-http
+git remote add github https://github.com/clastr33/alab-laravel-vue.git
+git fetch github --prune
+git merge github/master --allow-unrelated-histories
+git push
+```
