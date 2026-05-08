@@ -24,6 +24,10 @@ Repozytorium zawiera:
 
 - Docker + Docker Compose
 
+<p align="center">
+  <img src="frontend/src/assets/Screenshot_login.png" alt="Login" />
+</p>
+
 ## Uruchomienie lokalne przez Docker Compose (rekomendowane)
 
 1. Uruchom kontenery:
@@ -48,6 +52,12 @@ Ręczne uruchomienie importu:
 ```bash
 docker compose exec backend php artisan app:import-results-csv /var/www/html/import/results.csv
 ```
+
+<p align="center">
+  <img src="frontend/src/assets/Screenshot_docker.png" alt="Docker" />
+</p>
+
+
 
 ## Uruchomienie lokalne bez Dockera
 
@@ -86,6 +96,9 @@ php artisan app:import-results-csv import/results.csv
 
 Log importu trafia do: `backend/storage/logs/import-results.log`.
 
+
+
+
 ### Frontend (Vue)
 
 ```bash
@@ -99,6 +112,11 @@ Build produkcyjny:
 ```bash
 npm run build
 ```
+
+<p align="center">
+  <img src="frontend/src/assets/Screenshot_results.png" alt="Results" />
+</p>
+
 
 ## Testy
 
@@ -167,7 +185,7 @@ Konfiguracja pipeline znajduje się w `.gitlab-ci.yml` i składa się z etapów:
 ---
 
 <p align="center">
-  <img src="frontend/src/assets/gitlab.png" alt="GitLab" />
+  <img src="frontend/src/assets/Screenshot_gitlab.png" alt="GitLab" />
 </p>
 
 ## Linki
