@@ -1,8 +1,17 @@
 import { getToken } from './auth'
 
+function resolveApiUrl(path) {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+  const suffix = path.startsWith('/') ? path : `/${path}`
+  return base ? `${base}${suffix}` : suffix
+}
+
 export async function apiFetch(path, { headers, ...init } = {}) {
   const token = getToken()
-  const res = await fetch(path, {
+  const res = await fetch(resolveApiUrl(path), {
     ...init,
     headers: {
       Accept: 'application/json',
